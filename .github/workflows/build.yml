@@ -11,10 +11,16 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install platformio
-      - run: pio run
+      - name: Find project
+        run: |
+          find . -name platformio.ini -not -path "./.pio/*"
+          P=$(find . -name platformio.ini -not -path "./.pio/*" | head -n1)
+          if [ -z "$P" ]; then echo "platformio.ini NOT FOUND"; ls -R | head -60; exit 1; fi
+          echo "DIR=$(dirname "$P")" >> "$GITHUB_ENV"
+      - run: pio run -d "$DIR"
       - uses: actions/upload-artifact@v4
         with:
           name: esp32fw
           path: |
-            esp32fw.bin
-            .pio/build/m5stickc_plus2/firmware.bin
+            ${{ env.DIR }}/esp32fw.bin
+            ${{ env.DIR }}/.pio/build/m5stickc_plus2/firmware.bin
